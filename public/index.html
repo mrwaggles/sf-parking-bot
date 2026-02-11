@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#be123c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="icon" type="image/png" href="/icon.png">
+    <title>SF Parking Bot</title>
+    <style>
+        :root {
+            /* Default Theme */
+            --primary-color: #be123c;
+            --bg-color: #fca5a5;
+            --chat-bg: #fff1f2;
+            --header-bg: rgba(255, 255, 255, 0.9);
+            --bot-bg: #ffffff;
+            --user-bg: #e11d48;
+            --user-text: white;
+            --accent-light: #ffe4e6;
+        }
+
+        /* Logic Themes */
+        .theme-green {
+            --primary-color: #059669;
+            --bg-color: #6ee7b7;
+            --chat-bg: #ecfdf5;
+            --user-bg: #10b981;
+            --accent-light: #d1fae5;
+        }
+
+        .theme-blue {
+            --primary-color: #2563eb;
+            --bg-color: #93c5fd;
+            --chat-bg: #eff6ff;
+            --user-bg: #3b82f6;
+            --accent-light: #dbeafe;
+        }
+
+        .theme-red {
+            --primary-color: #dc2626;
+            --bg-color: #fca5a5;
+            --chat-bg: #fef2f2;
+            --user-bg: #ef4444;
+            --accent-light: #fee2e2;
+        }
+
+        .theme-orange {
+            --primary-color: #ea580c;
+            --bg-color: #fdba74;
+            --chat-bg: #fff7ed;
+            --user-bg: #f97316;
+            --accent-light: #ffedd5;
+        }
+
+        .theme-yellow {
+            --primary-color: #ca8a04;
+            --bg-color: #fde047;
+            --chat-bg: #fefce8;
+            --user-bg: #eab308;
+            --user-text: black;
+            --accent-light: #fef9c3;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            color: #333;
+            transition: background-color 0.5s ease;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 450px;
+            background-color: var(--chat-bg);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: background-color 0.5s ease;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            padding: 15px 15px 10px 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            transition: color 0.5s ease;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 90%;
+            line-height: 1.4;
+            font-size: 0.95rem;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .bot {
+            align-self: flex-start;
+            background-color: var(--bot-bg);
+            color: #374151;
+            border-bottom-left-radius: 4px;
+        }
+
+        .user {
+            align-self: flex-end;
+            background-color: var(--user-bg);
+            color: var(--user-text);
+            border-bottom-right-radius: 4px;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* CARD STYLES */
+        .parking-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-header {
+            font-weight: 800;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .status-green {
+            color: #059669;
+        }
+
+        .status-red {
+            color: #dc2626;
+        }
+
+        .status-blue {
+            color: #2563eb;
+        }
+
+        .status-orange {
+            color: #ea580c;
+        }
+
+        .status-yellow {
+            color: #ca8a04;
+        }
+
+        .section-title {
+            font-size: 0.75em;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 2px;
+        }
+
+        .rules-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 0.9em;
+        }
+
+        .rules-list li {
+            margin-bottom: 4px;
+        }
+
+        .cleaning-list {
+            font-size: 0.85em;
+            background-color: #f9fafb;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .input-area {
+            padding: 15px;
+            background-color: var(--header-bg);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-shrink: 0;
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
+        }
+
+        input {
+            flex-grow: 1;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            outline: none;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            background-color: #f9fafb;
+        }
+
+        input:focus {
+            border-color: var(--user-bg);
+            background-color: white;
+        }
+
+        button {
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 0;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn {
+            background-color: var(--user-bg);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.5s ease;
+        }
+
+        .send-btn svg {
+            fill: var(--user-text);
+            width: 20px;
+            height: 20px;
+            margin-left: 3px;
+            transition: fill 0.5s ease;
+        }
+
+        .location-btn {
+            background-color: var(--accent-light);
+            color: var(--primary-color);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        .location-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .loading-dots:after {
+            content: '.';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+
+            0%,
+            20% {
+                content: '.';
+            }
+
+            40% {
+                content: '..';
+            }
+
+            60% {
+                content: '...';
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="phone-container" id="app">
+        <header>
+            <h1>SF Parking Bot 🚙</h1>
+            <div class="subtitle">Meters • RPP • Cleaning</div>
+        </header>
+
+        <div class="chat-container" id="chat">
+            <div class="message bot">
+                👋 <strong>Hi! need to park?</strong><br>
+                Send me your location, or type an address (e.g., "Mission & 20th").<br><br>
+                I'll check cleaning signs, meters, and RPP zones.
+            </div>
+        </div>
+
+        <div class="input-area">
+            <button class="location-btn" onclick="getLocation()" title="Use my location">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                    <path
+                        d="M440-42v-80q-125-14-214.5-103.5T122-440h-80v-80h80q14-125 103.5-214.5T440-838v-80h80v80q125 14 214.5 103.5T838-520h80v80h-80q-14 125-103.5 214.5T520-122v80h-80Zm40-158q116 0 198-82t82-198q0-116-82-198t-198-82q-116 0-198 82t-82 198q0 116 82 198t198 82Zm0-120q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Z" />
+                </svg>
+            </button>
+            <input type="text" id="messageInput" placeholder="Location or address..." onkeypress="handleKeyPress(event)"
+                autocomplete="off">
+            <button class="send-btn" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('messageInput');
+        const chat = document.getElementById('chat');
+        const app = document.getElementById('app');
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function setTheme(color) {
+            // Reset
+            app.classList.remove('theme-green', 'theme-red', 'theme-blue', 'theme-orange', 'theme-yellow');
+            document.body.classList.remove('theme-green', 'theme-red', 'theme-blue', 'theme-orange', 'theme-yellow');
+
+            if (color) {
+                const themeClass = `theme-${color}`;
+                app.classList.add(themeClass);
+                document.body.classList.add(themeClass);
+            }
+        }
+
+        async function sendMessage(textOverride, lat, lon) {
+            const text = textOverride || input.value.trim();
+            if (!text && !lat) return;
+
+            if (text) {
+                addMessage(text, 'user');
+                input.value = '';
+            } else if (lat) {
+                addMessage("📍 Location Shared", 'user');
+            }
+
+            const typingId = addTypingIndicator();
+
+            try {
+                const payload = {};
+                if (text) payload.message = text;
+                if (lat) payload.latitude = lat;
+                if (lon) payload.longitude = lon;
+
+                const response = await fetch('/api/sms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+
+                removeMessage(typingId);
+
+                // Handle new structured response
+                if (data.status) {
+                    addCardMessage(data);
+                    setTheme(data.statusColor);
+                } else if (data.reply) {
+                    // Fallback
+                    addMessage(data.reply, 'bot');
+                }
+
+            } catch (error) {
+                removeMessage(typingId);
+                addMessage("Error connecting to bot.", 'bot');
+            }
+        }
+
+        function getLocation() {
+            if (!navigator.geolocation) {
+                addMessage("Geolocation is not supported.", 'bot');
+                return;
+            }
+            const typingId = addTypingIndicator();
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    removeMessage(typingId);
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    sendMessage(null, lat, lon);
+                },
+                (error) => {
+                    removeMessage(typingId);
+                    addMessage("Locating failed. Try valid HTTPS or Localhost.", 'bot');
+                }
+            );
+        }
+
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerHTML = text; // Allow HTML
+            chat.appendChild(div);
+            scrollToBottom();
+            return div.id = 'msg-' + Date.now();
+        }
+
+        function addCardMessage(data) {
+            const div = document.createElement('div');
+            div.className = 'message bot';
+
+            let html = `<div class="parking-card">`;
+
+            // Header
+            html += `<div class="card-header status-${data.statusColor}">${data.title || data.status}</div>`;
+
+            // Rules
+            if (data.rules && data.rules.length > 0) {
+                html += `<div class="section-title">Conditions</div>`;
+                html += `<ul class="rules-list">`;
+                data.rules.forEach(rule => {
+                    html += `<li>${rule}</li>`;
+                });
+                html += `</ul>`;
+            }
+
+            // Cleaning
+            if (data.cleaning && data.cleaning.length > 0) {
+                html += `<div class="section-title">Cleaning</div>`;
+                html += `<div class="cleaning-list">`;
+                data.cleaning.forEach(c => {
+                    html += `<div>${c}</div>`;
+                });
+                html += `</div>`;
+            }
+
+            html += `</div>`; // End Card
+
+            div.innerHTML = html;
+            chat.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addTypingIndicator() {
+            const div = document.createElement('div');
+            div.className = `message bot loading-dots`;
+            div.innerText = 'Checking';
+            div.id = 'typing-' + Date.now();
+            chat.appendChild(div);
+            scrollToBottom();
+            return div.id;
+        }
+
+        function removeMessage(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function scrollToBottom() {
+            requestAnimationFrame(() => {
+                chat.scrollTop = chat.scrollHeight;
+            });
+        }
+    </script>
+</body>
+
+</html>
